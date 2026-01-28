@@ -3,7 +3,7 @@ const http = require('http');
 
 const app = express();
 const API_KEY = process.env.API_KEY || 'd613c3';
-const LLM_PORT = process.env.LLM_PORT || 2145
+const LLM_PORT = process.env.LLM_PORT || 2146
 
 app.use(express.raw({ type: '*/*' }));
 
