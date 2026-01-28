@@ -11,8 +11,8 @@ RUN npm install --production
 COPY . .
 
 ENV NODE_ENV=production
-ENV PORT=2145
+ENV LLM_PORT=2146
 
-EXPOSE 2145
+EXPOSE 2146
 
 CMD ["node", "index.js"]
