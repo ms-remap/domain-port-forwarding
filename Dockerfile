@@ -2,7 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy files
+# Install bash
+RUN apk add --no-cache bash
+
 COPY package*.json ./
 RUN npm install --production
 
