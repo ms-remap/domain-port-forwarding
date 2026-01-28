@@ -18,10 +18,10 @@ app.all('/*', (req, res) => {
 
   const token = authHeader.slice('Bearer '.length).trim();
 
-  // ----- LOG FIRST 4 AND LAST 4 CHARS -----
-  const first4 = token.slice(0, 4);
-  const last4 = token.slice(-4);
-  console.log(`Incoming token: ${first4}...${last4}`);
+  // // ----- LOG FIRST 4 AND LAST 4 CHARS -----
+  // const first4 = token.slice(0, 4);
+  // const last4 = token.slice(-4);
+  // console.log(`Incoming token: ${first4}...${last4}`);
 
   if (token !== API_KEY) {
     return res.status(401).json({ error: 'Unauthorized: Invalid token' });
@@ -46,7 +46,7 @@ app.all('/*', (req, res) => {
       ...req.headers,
       // Remove auth before forwarding (optional)
       authorization: undefined,
-      host: undefined, // let Node set the host header
+      // host: undefined, 
     },
   };
 
