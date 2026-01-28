@@ -2,16 +2,24 @@ const express = require('express');
 const http = require('http');
 
 const app = express();
-const API_KEY = process.env.API_KEY || 'my-secret-key';
+const API_KEY = process.env.API_KEY || 'd613c3';
 
 app.use(express.raw({ type: '*/*' }));
 
 app.all('/*', (req, res) => {
-  const apiKey = req.headers['x-api-key'];
+  const authHeader = req.headers['authorization'];
 
-  if (!apiKey || apiKey !== API_KEY) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({
-      error: 'Unauthorized: Invalid or missing API key',
+      error: 'Unauthorized: Missing Authorization header',
+    });
+  }
+
+  const token = authHeader.slice('Bearer '.length).trim();
+
+  if (token !== API_KEY) {
+    return res.status(401).json({
+      error: 'Unauthorized: Invalid token',
     });
   }
 
@@ -20,7 +28,11 @@ app.all('/*', (req, res) => {
     port: 2145,
     path: req.originalUrl,
     method: req.method,
-    headers: req.headers,
+    headers: {
+      ...req.headers,
+      // optionally strip auth before forwarding
+      authorization: undefined,
+    },
   };
 
   const proxyReq = http.request(options, proxyRes => {
