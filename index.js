@@ -17,6 +17,12 @@ app.all('/*', (req, res) => {
   }
 
   const token = authHeader.slice('Bearer '.length).trim();
+
+  // ----- LOG FIRST 4 AND LAST 4 CHARS -----
+  const first4 = token.slice(0, 4);
+  const last4 = token.slice(-4);
+  console.log(`Incoming token: ${first4}...${last4}`);
+
   if (token !== API_KEY) {
     return res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
