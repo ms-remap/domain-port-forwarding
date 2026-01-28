@@ -3,27 +3,34 @@ const http = require('http');
 
 const app = express();
 const API_KEY = process.env.API_KEY || 'd613c3';
-const LLM_PORT = process.env.LLM_PORT || 2146
+const LLM_PORT = process.env.LLM_PORT || 2146;
 
+// Parse all request bodies as raw buffer
 app.use(express.raw({ type: '*/*' }));
 
 app.all('/*', (req, res) => {
   const authHeader = req.headers['authorization'];
 
+  // ----- AUTH CHECK -----
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      error: 'Unauthorized: Missing Authorization header',
-    });
+    return res.status(401).json({ error: 'Unauthorized: Missing Authorization header' });
   }
 
   const token = authHeader.slice('Bearer '.length).trim();
-
   if (token !== API_KEY) {
-    return res.status(401).json({
-      error: 'Unauthorized: Invalid token',
-    });
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 
+  // ----- VALIDATE JSON IF CONTENT-TYPE IS APPLICATION/JSON -----
+  if (req.headers['content-type']?.includes('application/json') && req.body?.length) {
+    try {
+      JSON.parse(req.body.toString());
+    } catch (err) {
+      return res.status(400).json({ error: 'Invalid JSON', details: err.message });
+    }
+  }
+
+  // ----- PROXY OPTIONS -----
   const options = {
     hostname: '172.17.0.1',
     port: LLM_PORT,
@@ -31,20 +38,31 @@ app.all('/*', (req, res) => {
     method: req.method,
     headers: {
       ...req.headers,
-      // optionally strip auth before forwarding
+      // Remove auth before forwarding (optional)
       authorization: undefined,
+      host: undefined, // let Node set the host header
     },
   };
 
   const proxyReq = http.request(options, proxyRes => {
-    res.writeHead(proxyRes.statusCode, proxyRes.headers);
-    proxyRes.pipe(res);
+    let data = '';
+    proxyRes.on('data', chunk => (data += chunk));
+    proxyRes.on('end', () => {
+      // Log backend errors if any
+      if (proxyRes.statusCode >= 400) {
+        console.error(`Backend error ${proxyRes.statusCode}: ${data}`);
+      }
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      res.end(data);
+    });
   });
 
   proxyReq.on('error', err => {
-    res.status(500).send(err.message);
+    console.error('Proxy request error:', err);
+    res.status(500).json({ error: 'Proxy request failed', details: err.message });
   });
 
+  // Forward body if present
   if (req.body?.length) {
     proxyReq.write(req.body);
   }
