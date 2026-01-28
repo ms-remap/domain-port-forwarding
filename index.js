@@ -42,12 +42,13 @@ app.all('/*', (req, res) => {
     port: LLM_PORT,
     path: req.originalUrl,
     method: req.method,
-    headers: {
-      ...req.headers,
-      // Remove auth before forwarding (optional)
-      authorization: undefined,
-      // host: undefined, 
-    },
+    headers,
+    // headers: {
+    //   ...req.headers,
+    //   // Remove auth before forwarding (optional)
+    //   authorization: "",
+    //   // host: undefined, 
+    // },
   };
 
   const proxyReq = http.request(options, proxyRes => {
