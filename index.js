@@ -42,7 +42,7 @@ app.all('/*', (req, res) => {
     port: LLM_PORT,
     path: req.originalUrl,
     method: req.method,
-    headers,
+    headers: req.headers,
     // headers: {
     //   ...req.headers,
     //   // Remove auth before forwarding (optional)
